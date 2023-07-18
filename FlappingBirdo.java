@@ -6,46 +6,49 @@ import ea.*;
  * @author Karol Bakas
  * @version 18.07.23
  */
-public class FlappingBirdo extends Game
+public class FlappingBirdo extends Game implements Ticker
 {
-        /**
+    /**
      * Der 'Spieler'
      */
-    private Kreis spieler;
-    
-    /**
-     * Der einfache Hintergrund
-     */
-    private Rechteck hintergrund;
-    
+    private Hintergrund hintergrund;
+    private UI ui;
+    private Player player;
+    private Kreis kreis;
+
     /**
      * Konstruktor-Methode.<br />
      * Diese Methode richtet die beiden Grafiken ein.<br />
      * Die Kamera wird hierbei jedoch NICHT eingestellt.
      */
     public FlappingBirdo() {
-        super(500, 400,"Flapping-Birdo");
-        
-        //Hintergrund einstellen und sichtbar machen
-        hintergrund = new Rechteck(-100, -100, 600, 500);
-        hintergrund.farbeSetzen("Blau");
-        wurzel.add(hintergrund);
-        
-        //Zur besseren Orientierung werden zusaetzlich einfache Rechtecke eingefuegt
-        //So kann man immer mitkriegen, ob sich die Kamera oder der Kreis bewegt.
-        Rechteck r1 = new Rechteck(0, 20, 50, 10);
-        Rechteck r2 = new Rechteck(200, 300, 100, 40);
-        wurzel.add(r1);
-        wurzel.add(r2);
-        
-        //Spieler einstellen und sichtbar machen
-        spieler = new Kreis(200, 200, 100);
-        spieler.farbeSetzen("Rot");
-        wurzel.add(spieler);
+        super(1280, 720,"Flapping-Birdo");
+
+        //ui = new UI(statischeWurzel);
+        hintergrund = new Hintergrund(wurzel, 1280, 720);
+        ui = new UI(statischeWurzel,4);
+
+        player = new Player();
+        wurzel.add(player);
+
+        //Zusätzlich wird für die kontinuierliche Bewegung der Spielfigur
+        //noch das Ticker-Interface angemeldet, damit die tick-Methode
+        //alle 20 ms aufgerufen wird.
+        tickerAnmelden(this, 20);
+
+        Kreis k2 = new Kreis(250, 165, 20);
+        k2.farbeSetzen("Gelb");
+        k2.newtonschMachen();
+
+        Rechteck untergrund = new Rechteck(0,720-40, 1280, 40);
+        untergrund.farbeSetzen("Gruen");
+        untergrund.passivMachen(); 
+
+        k2.aktivMachen();
+        wurzel.add(untergrund,k2);
+
     }
 
-    
-    
     /**
      * Diese Methode sorgt dafuer, das ab sofort der Kreis im <i>Fokus</i>
      * der Kamera liegt.<br />
@@ -55,24 +58,9 @@ public class FlappingBirdo extends Game
      */
     public void fokusMachen() {
         //Den 'Spieler' als Fokus bei der Kamera setzen
-        cam.fokusSetzen(spieler);
+        cam.fokusSetzen(player);
     }
-    
-    /**
-     * Diese Methode setzt die Grenzen der Kamera so, dass die Kamera immer exakt
-     * innerhalb des Hintergrundes bleibt.<br />
-     * Um die Masse des Hintergrundes exakt zu erhalten, wird die Methode <code>dimension()</code> aus 
-     * der Klasse Raum verwendet. Sollte diese nicht mehr bekannt sein, ist es empfehlenswert, das 
-     * Kapitel 'Raum' im Handbuch nachzuschlagen!
-     */
-    public void kameraEingrenzen() {
-        //Das Bounding-Rechteck, das die Grenzen der Kamera festlegt ist
-        //genau das, was den Hitnergrund voll einschliesst.
-        // ==> dimension() - Methode (siehe Kapitel 'Raum')
-        BoundingRechteck grenzen = hintergrund.dimension();
-        cam.boundsSetzen(grenzen);
-    }
-    
+
     /**
      * Taste-Reagieren-Methode.<br />
      * Hierdrin wird auf den Tasten W/A/S/D der Kreis als Spielfigur bewegt. Auf 
@@ -84,40 +72,22 @@ public class FlappingBirdo extends Game
      */
     @Override
     public void tasteReagieren(int tastencode) {
-        switch(tastencode) {
-            
-            /* Verschieben des Kreises */
-            
-            case 0: //A - nach links
-                spieler.verschieben(-10, 0);
-                break;
-            case 3: //D - rechts
-                spieler.verschieben(10, 0);
-                break;
-            case 18: //S - unten
-                spieler.verschieben(0, 10);
-                break;
-            case 22: //W - oben
-                spieler.verschieben(0, -10);
-                break;
-                
-            /* Verschieben der Kamera */
-                
-            case 26: //Pfeiltaste oben
-                cam.verschieben(0, -10);
-                break;
-            case 27: //Pfeiltaste rechts
-                cam.verschieben(10, 0);
-                break;
-            case 28: //Pfeiltaste unten
-                cam.verschieben(0, 10);
-                break;
-            case 29: //Pfeiltaste links
-                cam.verschieben(-10, 0);
-                break;
+    }
+
+    public void tick() {
+        //ist gerade die Pfeiltaste rechts gedrückt?
+        if(tasteGedrueckt(Taste.RECHTS)) {
+            //Verschiebe die Figur um 1 Pixel nach rechts.
+            player.bewegen(2, 0);
+            //hintergrund.verschieben(2,0);
+        }
+
+        //ist gerade die Pfeiltaste links gedrückt?
+        if(tasteGedrueckt(Taste.LINKS)) {
+            //Verschiebe die Figur um 1 Pixel nach links.
+            player.bewegen(-2, 0);
+            //hintergrund.verschieben(-2,0);
         }
     }
 
-    
-    
 }
